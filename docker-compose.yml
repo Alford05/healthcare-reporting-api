@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: healthcare-reporting-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: healthcare_user
+      POSTGRES_PASSWORD: healthcare_password
+      POSTGRES_DB: healthcare_reporting
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+
