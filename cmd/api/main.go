@@ -20,6 +20,7 @@ func main() {
 
 	mux.HandleFunc("GET /health", handlers.HealthHandler(conn))
 	mux.HandleFunc("GET /api/patients", handlers.GetPatientsHandler(conn))
+	mux.HandleFunc("GET /api/visits", handlers.GetVisitsHandler(conn))
 
 	log.Println("server starting on port 8080")
 
