@@ -113,3 +113,63 @@ func GetVisits(db *sql.DB, filters VisitFilters) ([]models.TherapyVisit, error) 
 
 	return visits, nil
 }
+
+func CountVisits(db *sql.DB, filters VisitFilters) (int, error) {
+	query := `
+		SELECT COUNT(*)
+		FROM therapy_visits
+	`
+
+	conditions := []string{}
+	args := []any{}
+	argPos := 1
+
+	if filters.TherapistID != 0 {
+		conditions = append(
+			conditions,
+			fmt.Sprintf("therapist_id = $%d", argPos),
+		)
+		args = append(args, filters.TherapistID)
+		argPos++
+	}
+
+	if filters.VisitType != "" {
+		conditions = append(
+			conditions,
+			fmt.Sprintf("visit_type = $%d", argPos),
+		)
+		args = append(args, filters.VisitType)
+		argPos++
+	}
+
+	if filters.StartDate != "" {
+		conditions = append(
+			conditions,
+			fmt.Sprintf("visit_date >= $%d", argPos),
+		)
+		args = append(args, filters.StartDate)
+		argPos++
+	}
+
+	if filters.EndDate != "" {
+		conditions = append(
+			conditions,
+			fmt.Sprintf("visit_date <= $%d", argPos),
+		)
+		args = append(args, filters.EndDate)
+		argPos++
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	var total int
+
+	err := db.QueryRow(query, args...).Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}

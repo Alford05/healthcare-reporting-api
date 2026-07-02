@@ -32,15 +32,6 @@ func GetVisitsHandler(db *sql.DB) http.HandlerFunc {
 		filters.StartDate = r.URL.Query().Get("start_date")
 		filters.EndDate = r.URL.Query().Get("end_date")
 
-		visits, err := repository.GetVisits(db, filters)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "failed to fetch visits",
-			})
-			return
-		}
-
 		page := 1
 		pageSize := 10
 
@@ -69,18 +60,42 @@ func GetVisitsHandler(db *sql.DB) http.HandlerFunc {
 			}
 			pageSize = parsedPageSize
 		}
+
 		filters.Page = page
 		filters.PageSize = pageSize
 
-		encoder := json.NewEncoder(w)
-		encoder.SetIndent("", "  ")
-
-		response := map[string]any{
-			"data":      visits,
-			"page":      page,
-			"page_size": pageSize,
+		visits, err := repository.GetVisits(db, filters)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "failed to fetch visits",
+			})
+			return
+		}
+		totalRecords, err := repository.CountVisits(db, filters)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "failed to count visits",
+			})
+			return
 		}
 
+		totalPages := 0
+		if pageSize > 0 {
+			totalPages = (totalRecords + pageSize - 1) / pageSize
+		}
+
+		response := map[string]any{
+			"data":          visits,
+			"page":          page,
+			"page_size":     pageSize,
+			"total_records": totalRecords,
+			"total_pages":   totalPages,
+		}
+
+		encoder := json.NewEncoder(w)
+		encoder.SetIndent("", "  ")
 		encoder.Encode(response)
 	}
 }
