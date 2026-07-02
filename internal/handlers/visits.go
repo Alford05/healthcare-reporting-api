@@ -41,8 +41,46 @@ func GetVisitsHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		page := 1
+		pageSize := 10
+
+		pageParam := r.URL.Query().Get("page")
+		if pageParam != "" {
+			parsedPage, err := strconv.Atoi(pageParam)
+			if err != nil || parsedPage < 1 {
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(map[string]string{
+					"error": "invalid page",
+				})
+				return
+			}
+			page = parsedPage
+		}
+
+		pageSizeParam := r.URL.Query().Get("page_size")
+		if pageSizeParam != "" {
+			parsedPageSize, err := strconv.Atoi(pageSizeParam)
+			if err != nil || parsedPageSize < 1 {
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(map[string]string{
+					"error": "invalid page_size",
+				})
+				return
+			}
+			pageSize = parsedPageSize
+		}
+		filters.Page = page
+		filters.PageSize = pageSize
+
 		encoder := json.NewEncoder(w)
 		encoder.SetIndent("", "  ")
-		encoder.Encode(visits)
+
+		response := map[string]any{
+			"data":      visits,
+			"page":      page,
+			"page_size": pageSize,
+		}
+
+		encoder.Encode(response)
 	}
 }

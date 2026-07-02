@@ -13,6 +13,8 @@ type VisitFilters struct {
 	VisitType   string
 	StartDate   string
 	EndDate     string
+	Page        int
+	PageSize    int
 }
 
 func GetVisits(db *sql.DB, filters VisitFilters) ([]models.TherapyVisit, error) {
@@ -70,6 +72,13 @@ func GetVisits(db *sql.DB, filters VisitFilters) ([]models.TherapyVisit, error) 
 	}
 
 	query += " ORDER BY visit_id"
+
+	if filters.PageSize > 0 {
+		offset := (filters.Page - 1) * filters.PageSize
+
+		query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argPos, argPos+1)
+		args = append(args, filters.PageSize, offset)
+	}
 
 	rows, err := db.Query(query, args...)
 	if err != nil {
