@@ -44,45 +44,24 @@ The application exposes REST API endpoints for patient management, therapy visit
 - Documentation compliance report
 - Department productivity report
 
-These reports are powered by SQL joins, aggregations, grouping, and calculated metrics to simulate real-world healthcare analytics workloads.
+These reports are powered by SQL joins, aggregations, grouping, and calculated metrics to simulate real-world healthcare analytics.
 
-🧱 Architecture
-                ┌─────────────────┐
-                │     Client      │
-                │ (curl / browser)│
-                └────────┬────────┘
-                         │
-                         ▼
-                ┌─────────────────┐
-                │   HTTP Router   │
-                │  + Middleware   │
-                └────────┬────────┘
-                         │
-                         ▼
-                ┌─────────────────┐
-                │    Handlers     │
-                │ Request/Response│
-                └────────┬────────┘
-                         │
-                         ▼
-                ┌─────────────────┐
-                │   Repository    │
-                │ SQL Data Access │
-                └────────┬────────┘
-                         │
-                         ▼
-                ┌─────────────────┐
-                │   PostgreSQL    │
-                │    Database     │
-                └─────────────────┘
-Project Structure
-cmd/api             Application entry point
-internal/db         Database connection logic
-internal/handlers   HTTP handlers
-internal/repository SQL queries and data access
-internal/models     Domain models
-migrations          Database schema
-seed                Sample data
+## 🧱 Architecture
+
+The application follows a layered architecture:
+
+```text
+Client
+  ↓
+HTTP Handlers
+  ↓
+Repository Layer (SQL)
+  ↓
+PostgreSQL Database
+```
+
+Responsibilities are separated between routing, request handling, business logic, and data access to keep the codebase maintainable and testable.
+
 ---
 
 ## 🐘 Database Design
@@ -95,9 +74,19 @@ The system uses PostgreSQL tables representing:
 - documentation_metrics
 - departments
 
-Relationships simulate a hospital therapy workflow:
-Departments → therapists → Therapy Visits → patients → Therapy Visits → Documentation Metrics 
+### Core Relationships
 
+```text
+Departments
+    ↓
+Therapists
+    ↓
+Therapy Visits
+   ↙       ↘
+Patients   Documentation Metrics
+```
+
+These relationships support reporting on therapist productivity, department performance, patient encounters, and documentation compliance.
 ---
 
 ## 🐳 Running the Project
