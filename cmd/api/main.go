@@ -5,8 +5,9 @@ import (
 	"net/http"
 
 	"github.com/Alford05/healthcare-reporting-api/internal/db"
-
 	"github.com/Alford05/healthcare-reporting-api/internal/handlers"
+	"github.com/Alford05/healthcare-reporting-api/internal/logger"
+	"github.com/Alford05/healthcare-reporting-api/internal/middleware"
 )
 
 func main() {
@@ -15,6 +16,8 @@ func main() {
 		log.Fatal(err)
 	}
 	defer conn.Close()
+
+	logr := logger.New()
 
 	mux := http.NewServeMux()
 
@@ -25,9 +28,11 @@ func main() {
 	mux.HandleFunc("GET /api/reports/documentation-compliance", handlers.DocumentationComplianceReportHandler(conn))
 	mux.HandleFunc("GET /api/reports/department-productivity", handlers.DepartmentProductivityReportHandler(conn))
 
-	log.Println("server starting on port 8080")
+	loggedMux := middleware.Logging(logr, mux)
 
-	err = http.ListenAndServe(":8080", mux)
+	logr.Info("server starting", "port", 8080)
+
+	err = http.ListenAndServe(":8080", loggedMux)
 	if err != nil {
 		log.Fatal(err)
 	}
